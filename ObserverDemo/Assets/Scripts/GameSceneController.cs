@@ -25,18 +25,46 @@ public class GameSceneController : MonoBehaviour
     [Range(3, 8)]
     public float playerSpeed = 5;
     [Range(1, 10)]
-    public float shieldDuration = 3;
+    public float shieldDuration = 1;
 
     private int totalPoints;
-    private int lives = 3;
+    private int lives = 1;
 
     private int currentLevelIndex = 0;
     private WaitForSeconds shipSpawnDelay = new WaitForSeconds(2);
 
     #endregion
 
+    #region Subject Implementation
+
+    private List<IEndGameObserver> endGameObservers;
+
+    public void AddObserver(IEndGameObserver observer)
+    {
+        endGameObservers.Add(observer);
+    }
+
+    public void RemoveObserver(IEndGameObserver observer)
+    {
+        endGameObservers.Remove(observer);
+    }
+
+    private void NotifyObservers()
+    {
+        foreach(IEndGameObserver observer in endGameObservers)
+        {
+            observer.Notify();
+        }
+    }
+
+    #endregion
+
     #region Startup
 
+    private void Awake()
+    {
+        endGameObservers = new List<IEndGameObserver>();
+    }
     void Start()
     {
         StartLevel(currentLevelIndex);
@@ -101,6 +129,11 @@ public class GameSceneController : MonoBehaviour
         {
             StartCoroutine(SpawnShip(true));
         }
+        else
+        {
+            StopAllCoroutines();
+            NotifyObservers();
+        }
     }
 
     private IEnumerator SpawnEnemies()
@@ -113,6 +146,9 @@ public class GameSceneController : MonoBehaviour
             Vector2 spawnPosition = ScreenBounds.RandomTopPosition();
 
             EnemyController enemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
+
+            AddObserver(enemy);
+
             enemy.gameObject.layer = LayerMask.NameToLayer("Enemy");
             enemy.shotSpeed = currentLevel.enemyShotSpeed;
             enemy.speed = currentLevel.enemySpeed;
@@ -140,7 +176,10 @@ public class GameSceneController : MonoBehaviour
         {
             int index = UnityEngine.Random.Range(0, powerUpPrefabs.Length);
             Vector2 spawnPosition = ScreenBounds.RandomTopPosition();
-            Instantiate(powerUpPrefabs[index], spawnPosition, Quaternion.identity);
+            PowerupController powerUp = Instantiate(powerUpPrefabs[index], spawnPosition, Quaternion.identity);
+
+            AddObserver(powerUp);
+
             yield return new WaitForSeconds(UnityEngine.Random.Range(currentLevel.powerUpMinimumWait,currentLevel.powerUpMaximumWait));
         }
     }

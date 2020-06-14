@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class PowerupController :MonoBehaviour
+public class PowerupController :MonoBehaviour, IEndGameObserver
 {
     #region Field Declarations
 
@@ -24,7 +24,7 @@ public class PowerupController :MonoBehaviour
 
         if (ScreenBounds.OutOfBounds(transform.position))
         {
-            Destroy(gameObject);
+            RemoveAndDestroy();
         }
     }
 
@@ -34,15 +34,32 @@ public class PowerupController :MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-       //TODO: Apply Power ups
+        //TODO: Apply Power ups
 
-        if(powerType == PowerType.Shield)
+        if (powerType == PowerType.Shield)
         {
             PlayerController playerShip = collision.gameObject.GetComponent<PlayerController>();
-            playerShip.EnableShield();
+
+            if (playerShip != null)
+            {
+                playerShip.EnableShield();
+            }
         }
-       
-       Destroy(gameObject);
+
+        RemoveAndDestroy();
+    }
+
+    public void Notify()
+    {
+        Destroy(gameObject);
+    }
+
+    private void RemoveAndDestroy()
+    {
+        GameSceneController gameSceneController = FindObjectOfType<GameSceneController>();
+        gameSceneController.RemoveObserver(this);
+
+        Destroy(gameObject);
     }
 
     #endregion

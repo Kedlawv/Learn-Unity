@@ -2,7 +2,7 @@
 using UnityEngine;
 
 public delegate void EnemyDestroyedHandler(int pointValue);
-public class EnemyController : MonoBehaviour
+public class EnemyController : MonoBehaviour, IEndGameObserver
 {
     #region Field Declarations
 
@@ -80,6 +80,14 @@ public class EnemyController : MonoBehaviour
             EnemyDestroyed(pointValue);
         }
 
+        RemoveAndDestroy();
+    }
+
+    private void RemoveAndDestroy()
+    {
+        GameSceneController gameSceneController = FindObjectOfType<GameSceneController>();
+        gameSceneController.RemoveObserver(this);
+
         Destroy(gameObject);
     }
 
@@ -127,4 +135,9 @@ public class EnemyController : MonoBehaviour
     }
 
     #endregion
+
+    public void Notify()
+    {
+        Destroy(gameObject);
+    }
 }
