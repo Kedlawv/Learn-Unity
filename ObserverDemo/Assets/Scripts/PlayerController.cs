@@ -17,7 +17,8 @@ public class PlayerController : MonoBehaviour
     private bool projectileEnabled = true;
     private WaitForSeconds shieldTimeOut;
     private GameSceneController gameSceneController;
-    
+    private ProjectileController lastProjectile;
+
     #endregion
 
     #region Startup
@@ -45,7 +46,7 @@ public class PlayerController : MonoBehaviour
     {
         MovePlayer();
 
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             if (projectileEnabled)
             {
@@ -58,7 +59,7 @@ public class PlayerController : MonoBehaviour
     {
         float horizontalMovement = Input.GetAxis("Horizontal");
 
-        if(Mathf.Abs(horizontalMovement) > Mathf.Epsilon)
+        if (Mathf.Abs(horizontalMovement) > Mathf.Epsilon)
         {
             horizontalMovement = horizontalMovement * Time.deltaTime * speed;
             horizontalMovement += transform.position.x;
@@ -93,11 +94,13 @@ public class PlayerController : MonoBehaviour
         ProjectileController projectile =
             Instantiate(projectilePrefab, spawnPosition, Quaternion.AngleAxis(90, Vector3.forward));
 
-       projectile.gameObject.GetComponent<SpriteRenderer>().color = Color.green;
+        projectile.gameObject.GetComponent<SpriteRenderer>().color = Color.green;
         projectile.gameObject.layer = LayerMask.NameToLayer("PlayerProjectile");
         projectile.isPlayers = true;
         projectile.projectileSpeed = 4;
         projectile.projectileDirection = Vector2.up;
+
+        lastProjectile = projectile;
 
         projectile.ProjectileOutOfBounds += EnableProjectile;
 
@@ -112,7 +115,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(collision.gameObject.GetComponent<ProjectileController>())
+        if (collision.gameObject.GetComponent<ProjectileController>())
             TakeHit();
     }
 
@@ -125,6 +128,9 @@ public class PlayerController : MonoBehaviour
         {
             HitByEnemy();
         }
+
+        lastProjectile.ProjectileOutOfBounds -= EnableProjectile;
+        gameSceneController.ScoreUpdatedOnKill -= GameSceneController_ScoreUpdatedOnKill;
 
         Destroy(gameObject);
     }
@@ -143,7 +149,7 @@ public class PlayerController : MonoBehaviour
     {
         yield return shieldTimeOut;
         shield.SetActive(false);
-        
+
     }
 
     #endregion
