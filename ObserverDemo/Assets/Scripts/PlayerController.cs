@@ -89,6 +89,8 @@ public class PlayerController : MonoBehaviour
         projectile.projectileSpeed = 4;
         projectile.projectileDirection = Vector2.up;
 
+        projectile.ProjectileOutOfBounds += EnableProjectile;
+
         DisableProjectile();
     }
 
